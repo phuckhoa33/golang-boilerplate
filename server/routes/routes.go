@@ -4,6 +4,7 @@ import (
 	"golang-boilerplate/server"
 	"golang-boilerplate/server/handlers"
 
+	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
@@ -11,10 +12,12 @@ func ConfigureRoutes(server *server.Server) {
 	// Create handlers
 	authHandler := handlers.NewAuthHandler(server)
 
-	// v1 := server.Echo.Group("/api/v1")
+	// Add middleware
+	server.Echo.Use(middleware.Logger())
 
-	server.Echo.GET("/login", authHandler.Login)
+	v1 := server.Echo.Group("/api/v1")
+	v1.GET("/login", authHandler.Login)
 
-	// Config swagger
-	server.Echo.GET("/swagger/*", echoSwagger.WrapHandler)
+	// Integrate swagger to api
+	server.Echo.GET("/docs/*", echoSwagger.WrapHandler)
 }
