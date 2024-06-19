@@ -19,9 +19,15 @@ func NewConfig() *Config {
 		log.Println("Error loading .env file")
 	}
 
-	return &Config{
+	env := &Config{
 		App:  LoadAppConfig(),
 		DB:   LoadDBConfig(),
 		Auth: LoadAuthConfig(),
 	}
+
+	if env.App.AppEnv == "development" {
+		log.Println("The App is running in development app")
+	}
+
+	return env
 }

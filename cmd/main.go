@@ -8,5 +8,6 @@ import (
 func main() {
 	config := config.NewConfig()
 
+	// Start app
 	application.Start(config)
 }

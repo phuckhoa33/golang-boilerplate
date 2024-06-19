@@ -9,6 +9,7 @@ type AppConfig struct {
 	AppVersion     string
 	AppEnv         string
 	AppPort        string
+	AppHost        string
 	AppApiDebug    string
 	AppApiPrefix   string
 }
@@ -21,6 +22,7 @@ func LoadAppConfig() AppConfig {
 		AppVersion:     os.Getenv("APP_VERSION"),
 		AppEnv:         os.Getenv("APP_ENV"),
 		AppPort:        os.Getenv("APP_PORT"),
+		AppHost:        os.Getenv("APP_HOST"),
 		AppApiDebug:    os.Getenv("APP_API_DEBUG"),
 		AppApiPrefix:   os.Getenv("APP_API_PREFIX"),
 	}
