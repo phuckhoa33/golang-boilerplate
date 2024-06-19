@@ -8,20 +8,20 @@ import (
 
 type Config struct {
 	App  AppConfig
-	Db   DbConfig
+	DB   DBConfig
 	Auth AuthConfig
 }
 
 func NewConfig() *Config {
 	// Load environment variables and check error
-	err := godotenv.Load(".env.development")
+	err := godotenv.Load(".env")
 	if err != nil {
 		log.Println("Error loading .env file")
 	}
 
 	return &Config{
 		App:  LoadAppConfig(),
-		Db:   LoadDbConfig(),
+		DB:   LoadDBConfig(),
 		Auth: LoadAuthConfig(),
 	}
 }

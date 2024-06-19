@@ -9,14 +9,13 @@ import (
 )
 
 func Init(config *config.Config) *gorm.DB {
-
-	// Assign database source string
 	databaseSourceName := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
-		config.Db.DatabaseHost,
-		config.Db.DatabasePort,
-		config.Db.DatabaseName,
-		config.Db.DatabaseUser,
-		config.Db.DatabasePassword)
+		config.DB.PostgresConfig.PostgresDatabaseHost,
+		config.DB.PostgresConfig.PostgresDatabasePort,
+		config.DB.PostgresConfig.PostgresDatabaseName,
+		config.DB.PostgresConfig.PostgresDatabaseUser,
+		config.DB.PostgresConfig.PostgresDatabasePassword)
+
 	log.Printf("Database run as %s", databaseSourceName)
 
 	// Connnect database with gorm
