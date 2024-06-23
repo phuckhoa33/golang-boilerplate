@@ -1,11 +1,17 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"time"
+
+	"github.com/jinzhu/gorm"
+)
 
 type User struct {
 	gorm.Model
-	UserId   string `json:"userId" gorm: "type:varchar(200);"`
-	Email    string `json:"email" gorm:"type:varchar(200);"`
-	Name     string `json:"name" gorm:"type:varchar(200);"`
-	Password string `json:"password" gorm:"type:varchar(200);"`
+	Email     string    `json:"email" gorm:"type:varchar(200);"`
+	Name      string    `json:"name" gorm:"type:varchar(200);"`
+	Password  string    `json:"password" gorm:"type:varchar(200);"`
+	Avatar    string    `json:"avatar" gorm:"type:varchar(200);"`
+	CreatedAt time.Time `json:"createdAt" gorm:"type:date;"`
+	UpdatedAt time.Time `json:"updatedAt" gorm:"type:date;"`
 }
