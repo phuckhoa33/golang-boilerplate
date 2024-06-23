@@ -12,22 +12,22 @@ type Data struct {
 	Message string `json:"message"`
 }
 
-func Response(context *gin.Context, statusCode int, data interface{}) error {
-	// nolint // context.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-	// nolint // context.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-	// nolint // context.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization")
-	return context.JSON(statusCode, data)
+func Response(context *gin.Context, statusCode int, data interface{}) {
+	context.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	context.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+	context.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization")
+	context.JSON(statusCode, data)
 }
 
-func MessageResponse(c *gin.Context, statusCode int, message string) error {
-	return Response(c, statusCode, Data{
+func MessageResponse(context *gin.Context, statusCode int, message string) {
+	Response(context, statusCode, Data{
 		Code:    statusCode,
 		Message: message,
 	})
 }
 
-func ErrorResponse(c *gin.Context, statusCode int, message string) error {
-	return Response(c, statusCode, Error{
+func ErrorResponse(context *gin.Context, statusCode int, message string) {
+	Response(context, statusCode, Error{
 		Code:  statusCode,
 		Error: message,
 	})

@@ -1,4 +1,4 @@
-package responses
+package responses_user_auth
 
 type LoginResponse struct {
 	AccessToken  string `json:"accessToken"`

@@ -1,4 +1,4 @@
-package usecase
+package services
 
 import (
 	"golang-boilerplate/models"
@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (tokenUsecase *UserTokenUsecase) CreateAccessToken(user *models.User) (t string, expired int64, err error) {
+func (userTokenService *UserTokenService) CreateAccessToken(user *models.User) (t string, expired int64, err error) {
 	exp := time.Now().Add(time.Hour * time.Duration(8))
 	claims := &JwtCustomClaims{
 		user.Name,
@@ -18,7 +18,7 @@ func (tokenUsecase *UserTokenUsecase) CreateAccessToken(user *models.User) (t st
 	}
 	expired = exp.Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err = token.SignedString([]byte(tokenUsecase.config.Auth.AccessTokenSecret))
+	t, err = token.SignedString([]byte(userTokenService.config.Auth.AccessTokenSecret))
 	if err != nil {
 		return
 	}

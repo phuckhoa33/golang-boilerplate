@@ -2,11 +2,13 @@ package controllers
 
 import (
 	requests "golang-boilerplate/domain/requests/user/auth"
-	responses "golang-boilerplate/domain/responses/user/auth"
+	"golang-boilerplate/domain/responses"
+	responses_user_auth "golang-boilerplate/domain/responses/user/auth"
 	"golang-boilerplate/models"
 	respositories "golang-boilerplate/respositories/postgresql"
 	"golang-boilerplate/server"
-	usecase "golang-boilerplate/usecase/user/token"
+	services "golang-boilerplate/services/user/token"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,7 +33,7 @@ func NewUserAuthV1Controller(server *server.Server) *UserAuthV1Controller {
 //	@Success		200		{object}	responses.LoginResponse
 //	@Failure		401		{object}	responses.Error
 //	@Router			/login [post]
-func (controller *UserAuthV1Controller) Login(context *gin.Context) error {
+func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 	loginRequest := new(requests.LoginRequest)
 
 	user := models.User{}
@@ -39,15 +41,15 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) error {
 
 	userRepository.GetUserByEmail(&user, loginRequest.Email)
 
-	tokenUsecase := usecase.NewTokenUsecase(controller.server.Config)
+	tokenUsecase := services.NewTokenService(controller.server.Config)
 	accessToken, exp, err := tokenUsecase.CreateAccessToken(&user)
 	if err != nil {
-		return err
+		return
 	}
 	refreshToken, err := tokenUsecase.CreateRefreshToken(&user)
 	if err != nil {
-		return err
+		return
 	}
-	res := responses.NewLoginResponse(accessToken, refreshToken, exp)
-	return responses.
+	res := responses_user_auth.NewLoginResponse(accessToken, refreshToken, exp)
+	responses.Response(context, http.StatusOK, res)
 }

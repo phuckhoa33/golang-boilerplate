@@ -1,4 +1,4 @@
-package usecase
+package services
 
 import (
 	"golang-boilerplate/models"
@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (tokenUsecase *UserTokenUsecase) CreateRefreshToken(user *models.User) (t string, err error) {
+func (userTokenService *UserTokenService) CreateRefreshToken(user *models.User) (t string, err error) {
 	claimsRefresh := &JwtCustomRefreshClaims{
 		ID: user.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -16,7 +16,7 @@ func (tokenUsecase *UserTokenUsecase) CreateRefreshToken(user *models.User) (t s
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claimsRefresh)
 
-	rt, err := refreshToken.SignedString([]byte(tokenUsecase.config.Auth.RefreshTokenSecret))
+	rt, err := refreshToken.SignedString([]byte(userTokenService.config.Auth.RefreshTokenSecret))
 	if err != nil {
 		return "", err
 	}

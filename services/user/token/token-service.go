@@ -1,4 +1,4 @@
-package usecase
+package services
 
 import (
 	"golang-boilerplate/config"
@@ -18,17 +18,17 @@ type JwtCustomRefreshClaims struct {
 	jwt.RegisteredClaims
 }
 
-type TokenUsecaseWrapper interface {
+type TokenServiceWrapper interface {
 	CreateAccessToken(user *models.User) (accessToken string, exp int64, err error)
 	CreateRefreshToken(user *models.User) (t string, err error)
 }
 
-type UserTokenUsecase struct {
+type UserTokenService struct {
 	config *config.Config
 }
 
-func NewTokenUsecase(config *config.Config) *UserTokenUsecase {
-	return &UserTokenUsecase{
+func NewTokenService(config *config.Config) *UserTokenService {
+	return &UserTokenService{
 		config: config,
 	}
 }
