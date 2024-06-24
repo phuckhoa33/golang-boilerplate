@@ -1,4 +1,4 @@
-package controllers
+package user_auth_v1_controller
 
 import (
 	requests "golang-boilerplate/domain/requests/user/auth"
@@ -26,13 +26,13 @@ func NewUserAuthV1Controller(server *server.Server) *UserAuthV1Controller {
 //	@Summary		Authenticate a user
 //	@Description	Perform user login
 //	@ID				user-login
-//	@Tags			User Actions
+//	@Tags			user.auth
 //	@Accept			json
 //	@Produce		json
 //	@Param			params	body		requests.LoginRequest	true	"User's credentials"
-//	@Success		200		{object}	responses.LoginResponse
+//	@Success		200		{object}	responses_user_auth.LoginResponse
 //	@Failure		401		{object}	responses.Error
-//	@Router			/login [post]
+//	@Router			/user/login [post]
 func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 	loginRequest := new(requests.LoginRequest)
 
@@ -41,12 +41,12 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 
 	userRepository.GetUserByEmail(&user, loginRequest.Email)
 
-	tokenUsecase := services.NewTokenService(controller.server.Config)
-	accessToken, exp, err := tokenUsecase.CreateAccessToken(&user)
+	tokenService := services.NewTokenService(controller.server.Config)
+	accessToken, exp, err := tokenService.CreateAccessToken(&user)
 	if err != nil {
 		return
 	}
-	refreshToken, err := tokenUsecase.CreateRefreshToken(&user)
+	refreshToken, err := tokenService.CreateRefreshToken(&user)
 	if err != nil {
 		return
 	}
