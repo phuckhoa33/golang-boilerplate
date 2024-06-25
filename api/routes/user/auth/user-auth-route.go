@@ -15,5 +15,6 @@ func ConfigureUserAuthRoute(server *server.Server, route *gin.RouterGroup) {
 	userAuthRoute := route.Group("/user")
 	{
 		userAuthRoute.POST("/login", authController.Login)
+		userAuthRoute.POST("/register", authController.Register)
 	}
 }

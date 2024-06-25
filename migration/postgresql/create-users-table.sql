@@ -10,15 +10,15 @@ CREATE TABLE users (
     password VARCHAR(100) NOT NULL,
     avatar VARCHAR(200) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    deleted_at TIMESTAMP
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP,
     -- Create roles column here and add a foreign key constraint to the roles table
-    roles TEXT[] NOT NULL,
-    FOREIGN KEY (roles) REFERENCES roles(permissions)
+    roleId INT NOT NULL,
+    FOREIGN KEY (roleId) REFERENCES roles(id)
 );
 
 -- Create two users for data sample
-INSERT INTO users (username, email, phoneNumber, fullname, address, gender, dateOfBirth, password, avatar, roles)
-VALUES ('admin', 'admin@gmail.com', '0123456789', 'Admin', 'Hanoi', 'MALE', '1990-01-01', 'admin', 'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50', '{ADMIN}');
-INSERT INTO users (username, email, phoneNumber, fullname, address, gender, dateOfBirth, password, avatar, roles)
-VALUES ('phuckhoa', 'phuckhoa81@gmail.com', '0123456789', 'Phuc Khoa', 'Hanoi', 'MALE', '2003-03-03', 'phuckhoa', 'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50', '{USER}');
+INSERT INTO users (username, email, phoneNumber, fullname, address, gender, dateOfBirth, password, avatar, roleId)
+VALUES ('admin', 'admin@gmail.com', '0123456789', 'Admin', 'Hanoi', 'MALE', '1990-01-01', 'admin', 'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50', 1);
+INSERT INTO users (username, email, phoneNumber, fullname, address, gender, dateOfBirth, password, avatar, roleId)
+VALUES ('phuckhoa', 'phuckhoa81@gmail.com', '0123456789', 'Phuc Khoa', 'Hanoi', 'MALE', '2003-03-03', 'phuckhoa', 'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50', 1);

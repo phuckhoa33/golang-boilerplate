@@ -1,4 +1,4 @@
-package requests
+package user_auth_requests
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -27,7 +27,9 @@ type LoginRequest struct {
 
 type RegisterRequest struct {
 	BasicAuth
-	Name string `json:"name" validate:"required" example:"John Doe"`
+	Username string `json:"username" validate:"required" example:"JohnDoe"`
+	Fullname string `json:"fullname" validate:"required" example:"John Doe"`
+	Gender   string `json:"gender" validate:"required" example:"MALE"`
 }
 
 func (rr RegisterRequest) Validate() error {
@@ -37,7 +39,7 @@ func (rr RegisterRequest) Validate() error {
 	}
 
 	return validation.ValidateStruct(&rr,
-		validation.Field(&rr.Name, validation.Required),
+		validation.Field(&rr.Username, validation.Required),
 	)
 }
 

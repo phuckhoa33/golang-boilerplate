@@ -1,4 +1,4 @@
-package responses
+package wrapper_responses
 
 import "github.com/gin-gonic/gin"
 

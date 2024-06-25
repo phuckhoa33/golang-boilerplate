@@ -6,3 +6,6 @@ CREATE TABLE roles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
+
+INSERT INTO roles (name, permissions)
+VALUES ('ADMIN', '{"CREATE_USER", "READ_ALL_DATA", "UPDATE_ROLES"}');
