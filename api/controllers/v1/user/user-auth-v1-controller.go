@@ -34,11 +34,14 @@ func NewUserAuthV1Controller(server *server.Server) *UserAuthV1Controller {
 //	@Failure		401		{object}	responses.Error
 //	@Router			/user/login [post]
 func (controller *UserAuthV1Controller) Login(context *gin.Context) {
+	// Get request
 	loginRequest := new(requests.LoginRequest)
 
+	// Check user is existed
 	user := models.User{}
 	userRepository := respositories.NewUserRepository(controller.server.DB)
 
+	// Check user is existed
 	userRepository.GetUserByEmail(&user, loginRequest.Email)
 
 	tokenService := services.NewTokenService(controller.server.Config)
