@@ -1,14 +1,14 @@
 CREATE TABLE user_devices (
     id SERIAL PRIMARY KEY,
-    userId INT,
-    deviceId VARCHAR(255),
-    accessType VARCHAR(255),
+    user_id INT,
+    device_id VARCHAR(255),
+    access_type VARCHAR(255),
     browser VARCHAR(255),
     os VARCHAR(255),
-    deviceStatus VARCHAR(255),
-    refreshToken VARCHAR(255),
+    device_status VARCHAR(255),
+    refresh_token VARCHAR(255),
     FOREIGN KEY (userId) REFERENCES users(id)
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );

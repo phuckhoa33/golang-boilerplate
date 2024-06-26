@@ -1,4 +1,4 @@
-package services
+package token_service
 
 import (
 	"golang-boilerplate/models"
