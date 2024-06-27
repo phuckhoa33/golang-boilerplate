@@ -56,3 +56,15 @@ func (fpr ForgotPasswordRequest) Validate() error {
 		validation.Field(&fpr.Email, is.Email),
 	)
 }
+
+type ForgotPasswordToResetPasswordRequest struct {
+	NewPassword        string `json:"newPassword" validate:"required" example:"332003"`
+	ConfirmNewPassword string `json:"newConfirmPassword" validate:"required" example:"332003"`
+}
+
+func (fptrp ForgotPasswordToResetPasswordRequest) Validate() error {
+	return validation.ValidateStruct(&fptrp,
+		validation.Field(&fptrp.NewPassword, validation.Length(minPathLength, 0)),
+		validation.Field(&fptrp.ConfirmNewPassword, validation.Length(minPathLength, 0)),
+	)
+}
