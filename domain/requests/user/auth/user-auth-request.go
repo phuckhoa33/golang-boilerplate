@@ -46,3 +46,13 @@ func (rr RegisterRequest) Validate() error {
 type RefreshRequest struct {
 	Token string `json:"token" validate:"required" example:"refresh_token"`
 }
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" validate:"required" example:"phuckhoa81@gmail.com"`
+}
+
+func (fpr ForgotPasswordRequest) Validate() error {
+	return validation.ValidateStruct(&fpr,
+		validation.Field(&fpr.Email, is.Email),
+	)
+}

@@ -16,5 +16,7 @@ func ConfigureUserAuthRoute(server *server.Server, route *gin.RouterGroup) {
 	{
 		userAuthRoute.POST("/login", authController.Login)
 		userAuthRoute.POST("/register", authController.Register)
+		userAuthRoute.POST("/refresh", authController.RefeshToken)
+		userAuthRoute.POST("/forgot-password", authController.ForgotPassword)
 	}
 }

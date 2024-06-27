@@ -8,9 +8,12 @@ import (
 	"golang-boilerplate/models"
 	respositories "golang-boilerplate/respositories/postgresql"
 	"golang-boilerplate/server"
+	mail_service "golang-boilerplate/services/mail"
+	random_creation_service "golang-boilerplate/services/shared"
 	token_service "golang-boilerplate/services/user/token"
 	"net/http"
 	"strings"
+	"time"
 
 	jwtGo "github.com/golang-jwt/jwt/v5"
 
@@ -19,16 +22,19 @@ import (
 )
 
 type UserAuthV1Controller struct {
-	server          *server.Server
-	userRespository *respositories.UserRepository
-	tokenService    *token_service.UserTokenService
+	server                *server.Server
+	userRespository       *respositories.UserRepository
+	tokenService          *token_service.UserTokenService
+	mailService           *mail_service.MailService
+	randomCreationService *random_creation_service.RandomCreationService
 }
 
 func NewUserAuthV1Controller(server *server.Server) *UserAuthV1Controller {
 	return &UserAuthV1Controller{
-		server:          server,
-		userRespository: respositories.NewUserRepository(server.DB),
-		tokenService:    token_service.NewTokenService(server.Config),
+		server:                server,
+		userRespository:       respositories.NewUserRepository(server.DB),
+		tokenService:          token_service.NewTokenService(server.Config),
+		randomCreationService: random_creation_service.NewRandomCreationService(),
 	}
 }
 
@@ -210,4 +216,73 @@ func (controller *UserAuthV1Controller) RefeshToken(context *gin.Context) {
 	//  return tokens
 	res := user_auth_responses.NewLoginResponse(accessToken, refreshToken, exp)
 	wrapper_responses.Response(context, http.StatusOK, res)
+}
+
+// ForgotPassword godoc
+//
+//	@Summary	 	Forgot password
+//	@Description	Perform forgot password
+//	@ID				user-forgot-password
+//	@Tags			user.auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			params	body		user_auth_requests.ForgotPasswordRequest	true	"User email"
+//	@Failure		401		{object}	wrapper_responses.Error
+//	@Router			/forgot-password [post]
+func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
+	// Initilizate request
+	forgotPasswordRequest := new(user_auth_requests.ForgotPasswordRequest)
+	if err := context.Bind(&forgotPasswordRequest); err != nil {
+		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	// Validate request
+	if err := forgotPasswordRequest.Validate(); err != nil {
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Check user
+	user := new(models.User)
+	controller.server.DB.Where("email = ?", forgotPasswordRequest.Email).First(&user)
+	if user.ID == 0 {
+		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "User not found")
+		return
+	}
+
+	// Create random otp for user
+	otp := controller.randomCreationService.GenerateOTP(6)
+
+	// Update verfifyAccountOtp in database of user
+	controller.server.DB.Update("VerifyAccountOtp", otp).First(&user)
+
+	// Create token have expired time
+	token, err := controller.tokenService.CreateFogotPasswordToken(forgotPasswordRequest.Email, "Forgot Password", time.Minute*3)
+	// Check generate token error
+	if err != nil {
+		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	// Config to, subject, templateFile string, data interface{} for send email
+	resetLink := fmt.Sprintf("%s:%s/reset-password?token=%s", controller.server.Config.App.AppHost, controller.server.Config.App.AppPort, token)
+	subject := "Forgot password"
+	templateFile := "forgot-password.html"
+	data := map[string]interface{}{
+		"username":  user.Username,
+		"resetLink": resetLink,
+	}
+
+	// Send email
+	err = controller.mailService.SendEmail(forgotPasswordRequest.Email, subject, templateFile, data)
+
+	// Check error
+	if err != nil {
+		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	// Return response
+	wrapper_responses.Response(context, http.StatusOK, "Send Email Successfully")
 }

@@ -10,6 +10,7 @@ type Config struct {
 	App  AppConfig
 	DB   DBConfig
 	Auth AuthConfig
+	Mail MailConfig
 }
 
 func NewConfig() *Config {
@@ -23,6 +24,7 @@ func NewConfig() *Config {
 		App:  LoadAppConfig(),
 		DB:   LoadDBConfig(),
 		Auth: LoadAuthConfig(),
+		Mail: LoadMailConfig(),
 	}
 
 	if env.App.AppEnv == "development" {
