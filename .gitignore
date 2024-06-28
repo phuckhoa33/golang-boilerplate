@@ -3,5 +3,5 @@
 .env.test
 .env.development
 .env.production
-docs
+/cmd/docs
 tmp

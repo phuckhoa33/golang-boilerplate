@@ -27,6 +27,7 @@ func NewMailService(config *config.Config) *MailService {
 func (ms *MailService) SendEmail(to, subject, templateFile string, data interface{}) error {
 	// Parse the email template
 	tmpl, err := template.ParseFiles(templateFile)
+
 	if err != nil {
 		return err
 	}

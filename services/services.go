@@ -9,8 +9,8 @@ type ServicesInitialization struct {
 	MailServiceConfig *mail_service.MailService
 }
 
-func NewServicesInitialization(config *config.Config) *ServicesInitialization {
-	return &ServicesInitialization{
+func NewServicesInitialization(config *config.Config) ServicesInitialization {
+	return ServicesInitialization{
 		MailServiceConfig: mail_service.NewMailService(config),
 	}
 }

@@ -3,25 +3,22 @@ package server
 import (
 	"golang-boilerplate/config"
 	db "golang-boilerplate/db/postgres"
-	"golang-boilerplate/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
 
 type Server struct {
-	Gin                    *gin.Engine
-	DB                     *gorm.DB
-	Config                 *config.Config
-	ServicesInitialization *services.ServicesInitialization
+	Gin    *gin.Engine
+	DB     *gorm.DB
+	Config *config.Config
 }
 
 func NewServer(config *config.Config) *Server {
 	return &Server{
-		Gin:                    gin.Default(),
-		DB:                     db.Init(config),
-		Config:                 config,
-		ServicesInitialization: services.NewServicesInitialization(config),
+		Gin:    gin.Default(),
+		DB:     db.Init(config),
+		Config: config,
 	}
 }
 

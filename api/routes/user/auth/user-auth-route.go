@@ -1,7 +1,7 @@
-package user_auth_route
+package user_route
 
 import (
-	user_auth_v1_controller "golang-boilerplate/api/controllers/v1/user"
+	user_v1_controller "golang-boilerplate/api/controllers/v1/user"
 	"golang-boilerplate/server"
 
 	"github.com/gin-gonic/gin"
@@ -9,7 +9,7 @@ import (
 
 func ConfigureUserAuthRoute(server *server.Server, route *gin.RouterGroup) {
 	// Import controller
-	authController := user_auth_v1_controller.NewUserAuthV1Controller(server)
+	authController := user_v1_controller.NewUserAuthV1Controller(server)
 
 	// Config route
 	userAuthRoute := route.Group("/user")

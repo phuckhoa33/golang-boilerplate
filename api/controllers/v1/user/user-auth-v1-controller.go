@@ -1,16 +1,16 @@
-package user_auth_v1_controller
+package user_v1_controller
 
 import (
 	"fmt"
-	user_auth_requests "golang-boilerplate/domain/requests/user/auth"
+	user_requests "golang-boilerplate/domain/requests/user"
 	wrapper_responses "golang-boilerplate/domain/responses"
-	user_auth_responses "golang-boilerplate/domain/responses/user/auth"
+	user_responses "golang-boilerplate/domain/responses/user"
 	"golang-boilerplate/models"
 	respositories "golang-boilerplate/respositories/postgresql"
 	"golang-boilerplate/server"
 	mail_service "golang-boilerplate/services/mail"
 	random_creation_service "golang-boilerplate/services/shared"
-	token_service "golang-boilerplate/services/user/token"
+	token_service "golang-boilerplate/services/token"
 	"net/http"
 	"strings"
 	"time"
@@ -24,7 +24,7 @@ import (
 type UserAuthV1Controller struct {
 	server                *server.Server
 	userRespository       *respositories.UserRepository
-	tokenService          *token_service.UserTokenService
+	tokenService          *token_service.TokenService
 	mailService           *mail_service.MailService
 	randomCreationService *random_creation_service.RandomCreationService
 }
@@ -34,6 +34,7 @@ func NewUserAuthV1Controller(server *server.Server) *UserAuthV1Controller {
 		server:                server,
 		userRespository:       respositories.NewUserRepository(server.DB),
 		tokenService:          token_service.NewTokenService(server.Config),
+		mailService:           mail_service.NewMailService(server.Config),
 		randomCreationService: random_creation_service.NewRandomCreationService(),
 	}
 }
@@ -46,13 +47,13 @@ func NewUserAuthV1Controller(server *server.Server) *UserAuthV1Controller {
 //	@Tags			user.auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			params	body		user_auth_requests.LoginRequest	true	"User's credentials"
-//	@Success		200		{object}	user_auth_responses.LoginResponse
+//	@Param			params	body		user_requests.LoginRequest	true	"User's credentials"
+//	@Success		200		{object}	user_responses.LoginResponse
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/login [post]
 func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 	// Get request
-	loginRequest := new(user_auth_requests.LoginRequest)
+	loginRequest := new(user_requests.LoginRequest)
 
 	if err := context.Bind(&loginRequest); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
@@ -93,7 +94,7 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 		return
 	}
 	//  return tokens
-	res := user_auth_responses.NewLoginResponse(accessToken, refreshToken, exp)
+	res := user_responses.NewLoginResponse(accessToken, refreshToken, exp)
 	wrapper_responses.Response(context, http.StatusOK, res)
 }
 
@@ -105,13 +106,13 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 //	@Tags			user.auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			params	body		user_auth_requests.RegisterRequest	true	"User's credentials"
+//	@Param			params	body		user_requests.RegisterRequest	true	"User's credentials"
 //	@Success		200		{string} 	Register successufully
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/register [post]
 func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 	// Get request information
-	registerRequest := new(user_auth_requests.RegisterRequest)
+	registerRequest := new(user_requests.RegisterRequest)
 
 	if err := context.Bind(&registerRequest); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
@@ -161,13 +162,13 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 //	@Tags			user.auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			params	body		user_auth_requests.RefreshRequest	true	"Refresh token"
-//	@Success		200		{object}	user_auth_responses.LoginResponse
+//	@Param			params	body		user_requests.RefreshRequest	true	"Refresh token"
+//	@Success		200		{object}	user_responses.LoginResponse
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/refresh-token [post]
 func (controller *UserAuthV1Controller) RefeshToken(context *gin.Context) {
 	// Initilizate request
-	refreshTokenRequest := new(user_auth_requests.RefreshRequest)
+	refreshTokenRequest := new(user_requests.RefreshRequest)
 	if err := context.Bind(&refreshTokenRequest); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
 		return
@@ -214,7 +215,7 @@ func (controller *UserAuthV1Controller) RefeshToken(context *gin.Context) {
 		return
 	}
 	//  return tokens
-	res := user_auth_responses.NewLoginResponse(accessToken, refreshToken, exp)
+	res := user_responses.NewLoginResponse(accessToken, refreshToken, exp)
 	wrapper_responses.Response(context, http.StatusOK, res)
 }
 
@@ -226,12 +227,12 @@ func (controller *UserAuthV1Controller) RefeshToken(context *gin.Context) {
 //	@Tags			user.auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			params	body		user_auth_requests.ForgotPasswordRequest	true	"User email"
+//	@Param			params	body		user_requests.ForgotPasswordRequest	true	"User email"
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/forgot-password [post]
 func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 	// Initilizate request
-	forgotPasswordRequest := new(user_auth_requests.ForgotPasswordRequest)
+	forgotPasswordRequest := new(user_requests.ForgotPasswordRequest)
 	if err := context.Bind(&forgotPasswordRequest); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
 		return
@@ -268,10 +269,11 @@ func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 	// Config to, subject, templateFile string, data interface{} for send email
 	resetLink := fmt.Sprintf("%s:%s/reset-password?token=%s", controller.server.Config.App.AppHost, controller.server.Config.App.AppPort, token)
 	subject := "Forgot password"
-	templateFile := "forgot-password.html"
+	templateFile := "templates/mail/forgot-password.html"
 	data := map[string]interface{}{
-		"username":  user.Username,
-		"resetLink": resetLink,
+		"Username":  user.Username,
+		"ResetLink": resetLink,
+		"AppName":   controller.server.Config.App.AppName,
 	}
 
 	// Send email
@@ -340,11 +342,11 @@ func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gi
 //	@Accept			json
 //	@Produce		json
 //	@Param token path string true "The forgot password token sent to the user's email."
-//	@Param			params	body		user_auth_requests.ForgotPasswordToResetPasswordRequest	true	"New password of user"
+//	@Param			params	body		user_requests.ForgotPasswordToResetPasswordRequest	true	"New password of user"
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/forgot-password/{token} [post]
 func (controller *UserAuthV1Controller) ForgotPasswordToResetPassword(context *gin.Context) {
-	fogotPasswordToResetPasswordRequest := new(user_auth_requests.ForgotPasswordToResetPasswordRequest)
+	fogotPasswordToResetPasswordRequest := new(user_requests.ForgotPasswordToResetPasswordRequest)
 	tokenParamString := context.Param("token")
 
 	// Parse token

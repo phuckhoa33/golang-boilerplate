@@ -31,5 +31,6 @@ func (userRepository *UserRepository) GetUserById(user *models.User, id any) {
 }
 
 func (userRepository *UserRepository) UpdateSingleProperty(user *models.User, propertyName string, value string) {
-	userRepository.DB.Update(propertyName, value).First(&user)
+	// Update value in users database depend on propertyName
+	userRepository.DB.Model(&user).Update(propertyName, value)
 }

@@ -21,14 +21,16 @@ type JwtCustomRefreshClaims struct {
 type TokenServiceWrapper interface {
 	CreateAccessToken(user *models.User) (accessToken string, exp int64, err error)
 	CreateRefreshToken(user *models.User) (t string, err error)
+	VerifyToken(tokenString string) (jwt.MapClaims, error)
+	CreateFogotPasswordToken(user *models.User) (t string, err error)
 }
 
-type UserTokenService struct {
+type TokenService struct {
 	config *config.Config
 }
 
-func NewTokenService(config *config.Config) *UserTokenService {
-	return &UserTokenService{
+func NewTokenService(config *config.Config) *TokenService {
+	return &TokenService{
 		config: config,
 	}
 }
