@@ -7,20 +7,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (userTokenService *TokenService) CreateAccessToken(user *models.User) (t string, expired int64, err error) {
+func (userTokenService *TokenService) CreateRefreshToken(user *models.User) (t string, err error) {
 	refreshTokenExpiredIn, _ := time.ParseDuration(userTokenService.config.Auth.RefreshTokenExpiredIn)
-	claims := &JwtCustomClaims{
-		user.Username,
-		user.ID,
-		jwt.RegisteredClaims{
+	claimsRefresh := &JwtCustomRefreshClaims{
+		ID: user.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(refreshTokenExpiredIn)),
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err = token.SignedString([]byte(userTokenService.config.Auth.RefreshTokenSecret))
-	if err != nil {
-		return
-	}
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claimsRefresh)
 
-	return
+	rt, err := refreshToken.SignedString([]byte(userTokenService.config.Auth.RefreshTokenSecret))
+	if err != nil {
+		return "", err
+	}
+	return rt, err
 }

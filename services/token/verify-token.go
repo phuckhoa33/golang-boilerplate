@@ -11,11 +11,11 @@ func (userTokenService *TokenService) VerifyToken(tokenString string) (jwt.MapCl
 	// Parse the token
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Check the signing method
-		if _, ok := token.Method.(*jwt.SigningMethodECDSA); !ok {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("INVALID SIGNING METHOD")
 		}
 
-		return userTokenService.config.Auth.AccessTokenSecret, nil
+		return []byte(userTokenService.config.Auth.AccessTokenSecret), nil
 	})
 
 	// Check for errors

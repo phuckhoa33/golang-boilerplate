@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"golang-boilerplate/config"
 	token_service "golang-boilerplate/services/token"
 	"net/http"
@@ -24,7 +23,6 @@ func AuthenticationMiddleware(config *config.Config) gin.HandlerFunc {
 
 		// The token should be prefixed with "Bearer "
 		tokenParts := strings.Split(tokenString, " ")
-		fmt.Println(tokenParts)
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authentication token"})
 			c.Abort()
