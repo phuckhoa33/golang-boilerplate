@@ -2,6 +2,7 @@ package user_v1_controller
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	user_requests "golang-boilerplate/domain/requests/user"
 	wrapper_responses "golang-boilerplate/domain/responses"
 	user_responses "golang-boilerplate/domain/responses/user"
@@ -23,7 +24,7 @@ import (
 
 type UserAuthV1Controller struct {
 	server                *server.Server
-	userRespository       *respositories.UserRepository
+	userRepository        *respositories.UserRepository
 	tokenService          *token_service.TokenService
 	mailService           *mail_service.MailService
 	randomCreationService *random_creation_service.RandomCreationService
@@ -32,7 +33,7 @@ type UserAuthV1Controller struct {
 func NewUserAuthV1Controller(server *server.Server) *UserAuthV1Controller {
 	return &UserAuthV1Controller{
 		server:                server,
-		userRespository:       respositories.NewUserRepository(server.DB),
+		userRepository:        respositories.NewUserRepository(server.DB),
 		tokenService:          token_service.NewTokenService(server.Config),
 		mailService:           mail_service.NewMailService(server.Config),
 		randomCreationService: random_creation_service.NewRandomCreationService(),
@@ -53,15 +54,15 @@ func NewUserAuthV1Controller(server *server.Server) *UserAuthV1Controller {
 //	@Router			/user/login [post]
 func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 	// Get request
-	loginRequest := new(user_requests.LoginRequest)
+	request := new(user_requests.LoginRequest)
 
-	if err := context.Bind(&loginRequest); err != nil {
+	if err := context.Bind(&request); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
 		return
 	}
 
 	// Check field is empty
-	if err := loginRequest.Validate(); err != nil {
+	if err := request.Validate(); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "Required fields is empty or invalid")
 		return
 	}
@@ -70,14 +71,14 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 	user := models.User{}
 
 	// Check user is existed
-	controller.userRespository.GetUserByEmail(&user, loginRequest.Email)
+	controller.userRepository.GetUserByEmail(&user, request.Email)
 
-	if user.ID == 0 || (bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginRequest.Password)) != nil) {
+	if user.ID == uuid.Nil || (bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)) != nil) {
 		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "Invalid credentials")
 		return
 	}
 
-	// Initilize token service
+	// Initialize token service
 	// tokenService := services.NewTokenService(controller.server.Config)
 
 	// Create access token
@@ -107,48 +108,47 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			params	body		user_requests.RegisterRequest	true	"User's credentials"
-//	@Success		200		{string} 	Register successufully
+//	@Success		200		{string}	string	"Register successfully"
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/register [post]
 func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 	// Get request information
-	registerRequest := new(user_requests.RegisterRequest)
+	request := new(user_requests.RegisterRequest)
 
-	if err := context.Bind(&registerRequest); err != nil {
+	if err := context.Bind(&request); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
 		return
 	}
 
 	// Validate field for request
-	if err := registerRequest.Validate(); err != nil {
+	if err := request.Validate(); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Check user is existed
 	user := models.User{}
-	controller.userRespository.GetUserByEmail(&user, registerRequest.Email)
-	if user.ID != 0 {
+	controller.userRepository.GetUserByEmail(&user, request.Email)
+	if user.ID != uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, "User is existed")
 		return
 	}
 
 	// Hash password
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(registerRequest.Password), bcrypt.DefaultCost)
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return
 	}
 
 	// Create new user
 	newUser := models.User{
-		Username: registerRequest.Username,
-		Email:    strings.ToLower(registerRequest.Email),
+		Username: request.Username,
+		Email:    strings.ToLower(request.Email),
 		Password: string(hashPassword),
-		Fullname: registerRequest.Fullname,
-		Gender:   registerRequest.Gender,
-		RoleId:   1,
+		FullName: request.FullName,
+		Gender:   request.Gender,
 	}
-	controller.userRespository.Create(&newUser)
+	controller.userRepository.Create(&newUser)
 
 	// Return response
 	wrapper_responses.Response(context, http.StatusOK, "Register successfully")
@@ -166,16 +166,16 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 //	@Success		200		{object}	user_responses.LoginResponse
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/refresh-token [post]
-func (controller *UserAuthV1Controller) RefeshToken(context *gin.Context) {
-	// Initilizate request
-	refreshTokenRequest := new(user_requests.RefreshRequest)
-	if err := context.Bind(&refreshTokenRequest); err != nil {
+func (controller *UserAuthV1Controller) RefreshToken(context *gin.Context) {
+	// Initialize request
+	request := new(user_requests.RefreshRequest)
+	if err := context.Bind(&request); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
 		return
 	}
 
 	// Parse token
-	token, err := jwtGo.Parse(refreshTokenRequest.Token, func(token *jwtGo.Token) (interface{}, error) {
+	token, err := jwtGo.Parse(request.Token, func(token *jwtGo.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwtGo.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("UNEXPECTED_SIGNING_METHOD: %v", token.Header["alg"])
 		}
@@ -194,9 +194,9 @@ func (controller *UserAuthV1Controller) RefeshToken(context *gin.Context) {
 
 	// Check user
 	user := models.User{}
-	controller.userRespository.GetUserById(&user, int(claims["id"].(float64)))
+	controller.userRepository.GetUserById(&user, int(claims["id"].(float64)))
 
-	if user.ID == 0 {
+	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "User not found")
 		return
 	}
@@ -231,23 +231,23 @@ func (controller *UserAuthV1Controller) RefeshToken(context *gin.Context) {
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/forgot-password [post]
 func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
-	// Initilizate request
-	forgotPasswordRequest := new(user_requests.ForgotPasswordRequest)
-	if err := context.Bind(&forgotPasswordRequest); err != nil {
+	// Initialize request
+	request := new(user_requests.ForgotPasswordRequest)
+	if err := context.Bind(&request); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
 		return
 	}
 
 	// Validate request
-	if err := forgotPasswordRequest.Validate(); err != nil {
+	if err := request.Validate(); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Check user
 	user := models.User{}
-	controller.userRespository.GetUserByEmail(&user, forgotPasswordRequest.Email)
-	if user.ID == 0 {
+	controller.userRepository.GetUserByEmail(&user, request.Email)
+	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "User not found")
 		return
 	}
@@ -255,11 +255,11 @@ func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 	// Create random otp for user
 	otp := controller.randomCreationService.GenerateOTP(6)
 
-	// Update verfifyAccountOtp in database of user
-	controller.userRespository.UpdateSingleProperty(&user, "verifyAccountOtp", otp)
+	// Update verifyAccountOtp in database of user
+	controller.userRepository.UpdateSingleProperty(&user, "verifyAccountOtp", otp)
 
 	// Create token have expired time
-	token, err := controller.tokenService.CreateFogotPasswordToken(forgotPasswordRequest.Email, "Forgot Password", time.Minute*3)
+	token, err := controller.tokenService.CreateForgotPasswordToken(request.Email, "Forgot Password", time.Minute*3)
 	// Check generate token error
 	if err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
@@ -277,11 +277,11 @@ func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 	}
 
 	// Send email
-	err = controller.mailService.SendEmail(forgotPasswordRequest.Email, subject, templateFile, data)
+	err = controller.mailService.SendEmail(request.Email, subject, templateFile, data)
 
 	// Check error
 	if err != nil {
-		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "Send email error")
 		return
 	}
 
@@ -301,10 +301,10 @@ func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/check-valid-forgot-link/{token} [get]
 func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gin.Context) {
-	tokenParamString := context.Param("token")
+	param := context.Param("token")
 
 	// Parse token
-	token, err := jwtGo.Parse(tokenParamString, func(token *jwtGo.Token) (interface{}, error) {
+	token, err := jwtGo.Parse(param, func(token *jwtGo.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwtGo.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("UNEXPECTED_SIGNING_METHOD: %v", token.Header["alg"])
 		}
@@ -323,8 +323,8 @@ func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gi
 
 	// Check user
 	user := models.User{}
-	controller.userRespository.GetUserById(&user, claims["iss"])
-	if user.ID == 0 {
+	controller.userRepository.GetUserById(&user, claims["iss"])
+	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "User not found")
 		return
 	}
@@ -346,11 +346,11 @@ func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gi
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/forgot-password/{token} [post]
 func (controller *UserAuthV1Controller) ForgotPasswordToResetPassword(context *gin.Context) {
-	fogotPasswordToResetPasswordRequest := new(user_requests.ForgotPasswordToResetPasswordRequest)
-	tokenParamString := context.Param("token")
+	request := new(user_requests.ForgotPasswordToResetPasswordRequest)
+	param := context.Param("token")
 
 	// Parse token
-	token, err := jwtGo.Parse(tokenParamString, func(token *jwtGo.Token) (interface{}, error) {
+	token, err := jwtGo.Parse(param, func(token *jwtGo.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwtGo.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("UNEXPECTED_SIGNING_METHOD: %v", token.Header["alg"])
 		}
@@ -369,36 +369,36 @@ func (controller *UserAuthV1Controller) ForgotPasswordToResetPassword(context *g
 
 	// Check user
 	user := models.User{}
-	controller.userRespository.GetUserById(&user, claims["iss"])
-	if user.ID == 0 {
+	controller.userRepository.GetUserById(&user, claims["iss"])
+	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "User not found")
 		return
 	}
 
-	if err := context.Bind(&fogotPasswordToResetPasswordRequest); err != nil {
+	if err := context.Bind(&request); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
 		return
 	}
 
 	// Validate request
-	if err := fogotPasswordToResetPasswordRequest.Validate(); err != nil {
+	if err := request.Validate(); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Check two password equal
-	if fogotPasswordToResetPasswordRequest.ConfirmNewPassword != fogotPasswordToResetPasswordRequest.NewPassword {
+	if request.ConfirmNewPassword != request.NewPassword {
 		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "Confirm new password must be equal new password")
 		return
 	}
 
 	// Reset password
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(fogotPasswordToResetPasswordRequest.NewPassword), bcrypt.DefaultCost)
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(request.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return
 	}
 
-	controller.userRespository.UpdateSingleProperty(&user, "password", string(hashPassword))
+	controller.userRepository.UpdateSingleProperty(&user, "password", string(hashPassword))
 
 	// Return response
 	wrapper_responses.Response(context, http.StatusOK, "Reset password successfully")

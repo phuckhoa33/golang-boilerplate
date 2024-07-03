@@ -28,7 +28,7 @@ type LoginRequest struct {
 type RegisterRequest struct {
 	BasicAuth
 	Username string `json:"username" validate:"required" example:"JohnDoe"`
-	Fullname string `json:"fullname" validate:"required" example:"John Doe"`
+	FullName string `json:"fullName" validate:"required" example:"John Doe"`
 	Gender   string `json:"gender" validate:"required" example:"MALE"`
 }
 

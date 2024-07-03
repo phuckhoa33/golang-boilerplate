@@ -10,7 +10,7 @@ import (
 func (userTokenService *TokenService) CreateRefreshToken(user *models.User) (t string, err error) {
 	refreshTokenExpiredIn, _ := time.ParseDuration(userTokenService.config.Auth.RefreshTokenExpiredIn)
 	claimsRefresh := &JwtCustomRefreshClaims{
-		ID: user.ID,
+		UserID: user.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(refreshTokenExpiredIn)),
 		},

@@ -38,7 +38,8 @@ func AuthenticationMiddleware(config *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userId", claims["user_id"])
+		// Assign user id to context
+		c.Set("userId", claims["id"])
 		c.Next()
 	}
 }

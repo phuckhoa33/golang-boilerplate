@@ -23,7 +23,10 @@ func (userRepository *UserRepository) GetUserByEmail(user *models.User, email st
 }
 
 func (userRepository *UserRepository) Create(user *models.User) {
-	userRepository.DB.Create(&user)
+	db := userRepository.DB.Create(&user)
+	if db.Error != nil {
+		panic(db.Error)
+	}
 }
 
 func (userRepository *UserRepository) GetUserById(user *models.User, id any) {

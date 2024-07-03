@@ -1,6 +1,7 @@
 package token_service
 
 import (
+	"github.com/google/uuid"
 	"golang-boilerplate/config"
 	"golang-boilerplate/models"
 
@@ -8,13 +9,13 @@ import (
 )
 
 type JwtCustomClaims struct {
-	Name string `json:"name"`
-	ID   uint   `json:"id"`
+	UserID uuid.UUID `json:"userId"`
 	jwt.RegisteredClaims
+	Username string
 }
 
 type JwtCustomRefreshClaims struct {
-	ID uint `json:"id"`
+	UserID uuid.UUID `json:"userId"`
 	jwt.RegisteredClaims
 }
 
@@ -22,7 +23,7 @@ type TokenServiceWrapper interface {
 	CreateAccessToken(user *models.User) (accessToken string, exp int64, err error)
 	CreateRefreshToken(user *models.User) (t string, err error)
 	VerifyToken(tokenString string) (jwt.MapClaims, error)
-	CreateFogotPasswordToken(user *models.User) (t string, err error)
+	CreateForgotPasswordToken(user *models.User) (t string, err error)
 }
 
 type TokenService struct {
