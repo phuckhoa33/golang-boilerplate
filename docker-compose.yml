@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  web:
+    build:
+      context: .
+      # Correct the path to your Dockerfile
+      dockerfile: Golang.Dockerfile
+    ports:
+      - 9999:9999
+    # Important to bind/mount your codebase dir to /app dir for live reload
+    volumes:
+      - ./:/app
+    networks:
+      - golang-network
+  postgres:
+    container_name: postgres_db
+    build: 
+      context: .
+      dockerfile: Postgresql.Dockerfile
+    ports:
+      - 5432:5432
+    networks:
+      - golang-network
+
+
+
+networks:
+  golang-network:
+    driver: bridge
