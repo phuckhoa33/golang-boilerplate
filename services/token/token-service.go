@@ -9,9 +9,9 @@ import (
 )
 
 type JwtCustomClaims struct {
-	UserID uuid.UUID `json:"userId"`
+	UserID   uuid.UUID `json:"userId"`
+	Username string    `json:"username"`
 	jwt.RegisteredClaims
-	Username string
 }
 
 type JwtCustomRefreshClaims struct {

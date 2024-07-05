@@ -25,6 +25,7 @@ import (
 type UserAuthV1Controller struct {
 	server                *server.Server
 	userRepository        *respositories.UserRepository
+	roleRepository        *respositories.RoleRepository
 	tokenService          *token_service.TokenService
 	mailService           *mail_service.MailService
 	randomCreationService *random_creation_service.RandomCreationService
@@ -34,6 +35,7 @@ func NewUserAuthV1Controller(server *server.Server) *UserAuthV1Controller {
 	return &UserAuthV1Controller{
 		server:                server,
 		userRepository:        respositories.NewUserRepository(server.DB),
+		roleRepository:        respositories.NewRoleRepository(server.DB),
 		tokenService:          token_service.NewTokenService(server.Config),
 		mailService:           mail_service.NewMailService(server.Config),
 		randomCreationService: random_creation_service.NewRandomCreationService(),
@@ -73,8 +75,15 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 	// Check user is existed
 	controller.userRepository.GetUserByEmail(&user, request.Email)
 
-	if user.ID == uuid.Nil || (bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)) != nil) {
-		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "Invalid credentials")
+	if user.ID == uuid.Nil {
+		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
+		return
+	}
+
+	// Check password
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
+	if err != nil {
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "PASSWORD_INCORRECT")
 		return
 	}
 
@@ -95,8 +104,7 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 		return
 	}
 	//  return tokens
-	res := user_responses.NewLoginResponse(accessToken, refreshToken, exp)
-	wrapper_responses.Response(context, http.StatusOK, res)
+	user_responses.NewLoginResponse(accessToken, refreshToken, exp)
 }
 
 // Register godoc
@@ -108,7 +116,6 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			params	body		user_requests.RegisterRequest	true	"User's credentials"
-//	@Success		200		{string}	string	"Register successfully"
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/register [post]
 func (controller *UserAuthV1Controller) Register(context *gin.Context) {
@@ -116,7 +123,7 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 	request := new(user_requests.RegisterRequest)
 
 	if err := context.Bind(&request); err != nil {
-		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
+		wrapper_responses.ErrorResponse(context, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -130,15 +137,16 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 	user := models.User{}
 	controller.userRepository.GetUserByEmail(&user, request.Email)
 	if user.ID != uuid.Nil {
-		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, "User is existed")
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "USER_EXISTED")
 		return
 	}
 
 	// Hash password
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return
-	}
+	hashPassword, _ := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+
+	// Parse string to uuid
+	role := models.Role{}
+	controller.roleRepository.GetRoleByName(&role, "ADMIN")
 
 	// Create new user
 	newUser := models.User{
@@ -147,11 +155,9 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 		Password: string(hashPassword),
 		FullName: request.FullName,
 		Gender:   request.Gender,
+		RoleId:   role.ID,
 	}
 	controller.userRepository.Create(&newUser)
-
-	// Return response
-	wrapper_responses.Response(context, http.StatusOK, "Register successfully")
 }
 
 // RefreshToken godoc
@@ -188,7 +194,7 @@ func (controller *UserAuthV1Controller) RefreshToken(context *gin.Context) {
 
 	claims, ok := token.Claims.(jwtGo.MapClaims)
 	if !ok && !token.Valid {
-		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "Invalid token")
+		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "INVALID_TOKEN")
 		return
 	}
 
@@ -197,7 +203,7 @@ func (controller *UserAuthV1Controller) RefreshToken(context *gin.Context) {
 	controller.userRepository.GetUserById(&user, int(claims["id"].(float64)))
 
 	if user.ID == uuid.Nil {
-		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "User not found")
+		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "USER_NOT_FOUND")
 		return
 	}
 
@@ -215,8 +221,7 @@ func (controller *UserAuthV1Controller) RefreshToken(context *gin.Context) {
 		return
 	}
 	//  return tokens
-	res := user_responses.NewLoginResponse(accessToken, refreshToken, exp)
-	wrapper_responses.Response(context, http.StatusOK, res)
+	user_responses.NewRefreshTokenResponse(accessToken, refreshToken, exp)
 }
 
 // ForgotPassword godoc
@@ -248,7 +253,7 @@ func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 	user := models.User{}
 	controller.userRepository.GetUserByEmail(&user, request.Email)
 	if user.ID == uuid.Nil {
-		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "User not found")
+		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
 		return
 	}
 
@@ -281,12 +286,9 @@ func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 
 	// Check error
 	if err != nil {
-		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "Send email error")
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	// Return response
-	wrapper_responses.Response(context, http.StatusOK, "Send Email Successfully")
 }
 
 // CheckValidForgotPasswordLink godoc
@@ -317,7 +319,7 @@ func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gi
 
 	claims, ok := token.Claims.(jwtGo.MapClaims)
 	if !ok && !token.Valid {
-		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "Invalid token")
+		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "INVALID_TOKEN")
 		return
 	}
 
@@ -325,7 +327,7 @@ func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gi
 	user := models.User{}
 	controller.userRepository.GetUserById(&user, claims["iss"])
 	if user.ID == uuid.Nil {
-		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "User not found")
+		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
 		return
 	}
 
@@ -363,7 +365,7 @@ func (controller *UserAuthV1Controller) ForgotPasswordToResetPassword(context *g
 
 	claims, ok := token.Claims.(jwtGo.MapClaims)
 	if !ok && !token.Valid {
-		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "Invalid token")
+		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "INVALID_TOKEN")
 		return
 	}
 
@@ -371,7 +373,7 @@ func (controller *UserAuthV1Controller) ForgotPasswordToResetPassword(context *g
 	user := models.User{}
 	controller.userRepository.GetUserById(&user, claims["iss"])
 	if user.ID == uuid.Nil {
-		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "User not found")
+		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
 		return
 	}
 
@@ -388,7 +390,7 @@ func (controller *UserAuthV1Controller) ForgotPasswordToResetPassword(context *g
 
 	// Check two password equal
 	if request.ConfirmNewPassword != request.NewPassword {
-		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "Confirm new password must be equal new password")
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "CONFIRM_PASSWORD_NOT_MATCH")
 		return
 	}
 
@@ -399,7 +401,4 @@ func (controller *UserAuthV1Controller) ForgotPasswordToResetPassword(context *g
 	}
 
 	controller.userRepository.UpdateSingleProperty(&user, "password", string(hashPassword))
-
-	// Return response
-	wrapper_responses.Response(context, http.StatusOK, "Reset password successfully")
 }

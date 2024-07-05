@@ -31,16 +31,11 @@ func NewUserMeV1Controller(server *server.Server) *UserMeV1Controller {
 // @Router /user/me [get]
 func (controller *UserMeV1Controller) GetUserProfile(context *gin.Context) {
 	// Get user id from context
-	userId, existed := context.Get("userId")
-	if !existed {
-		wrapper_responses.ErrorResponse(context, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-	userIdStr := userId.(float64)
+	userId, _ := context.Get("userId")
 
 	// Get user profile
 	user := models.User{}
-	if err := controller.server.DB.Where("id = ?", userIdStr).First(&user).Error; err != nil {
+	if err := controller.server.DB.Where("id = ?", userId).First(&user).Error; err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, err.Error())
 		return
 	}

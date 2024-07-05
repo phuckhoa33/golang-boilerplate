@@ -1,9 +1,9 @@
 package user_responses
 
 type LoginResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
-	Exp          int64  `json:"exp"`
+	AccessToken  string `json:"accessToken" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	RefreshToken string `json:"refreshToken" example:"def50200c1c92d..."`
+	Exp          int64  `json:"exp" example:"1623180000"`
 }
 
 func NewLoginResponse(token, refreshToken string, exp int64) *LoginResponse {
