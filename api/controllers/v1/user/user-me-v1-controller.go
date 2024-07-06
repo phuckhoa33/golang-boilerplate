@@ -2,9 +2,11 @@ package user_v1_controller
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	wrapper_responses "golang-boilerplate/domain/responses"
 	user_responses "golang-boilerplate/domain/responses/user"
 	"golang-boilerplate/models"
+	respositories "golang-boilerplate/respositories/postgresql"
 	"golang-boilerplate/server"
 	"net/http"
 
@@ -12,12 +14,14 @@ import (
 )
 
 type UserMeV1Controller struct {
-	server *server.Server
+	server         *server.Server
+	userRepository *respositories.UserRepository
 }
 
 func NewUserMeV1Controller(server *server.Server) *UserMeV1Controller {
 	return &UserMeV1Controller{
-		server: server,
+		server:         server,
+		userRepository: respositories.NewUserRepository(server.DB),
 	}
 }
 
@@ -35,8 +39,11 @@ func (controller *UserMeV1Controller) GetUserProfile(context *gin.Context) {
 
 	// Get user profile
 	user := models.User{}
-	if err := controller.server.DB.Where("id = ?", userId).First(&user).Error; err != nil {
-		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, err.Error())
+	controller.userRepository.GetUserById(&user, userId)
+
+	// Check user is existed
+	if user.ID == uuid.Nil {
+		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "NOT_FOUND_USER")
 		return
 	}
 

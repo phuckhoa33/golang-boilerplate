@@ -44,7 +44,7 @@ func (rr RegisterRequest) Validate() error {
 }
 
 type RefreshRequest struct {
-	Token string `json:"token" validate:"required" example:"refresh_token"`
+	Token string `json:"token" validate:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkMTAzZjQ3MS0wY2NkLTQ4NTgtYjQxNy1kNjdiMDk5MTBkMzQiLCJ1c2VybmFtZSI6IkpvaG5Eb2UiLCJleHAiOjE3MjAyNjUxNjd9.MBl3tPb9T-r7QsQTrTHENYd-UvSCzLMN7oKgOEoHxIo"`
 }
 
 type ForgotPasswordRequest struct {

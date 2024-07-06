@@ -16,7 +16,7 @@ func ConfigureUserAuthRoute(server *server.Server, route *gin.RouterGroup) {
 	{
 		userAuthRoute.POST("/login", authController.Login)
 		userAuthRoute.POST("/register", authController.Register)
-		userAuthRoute.POST("/refresh", authController.RefreshToken)
+		userAuthRoute.POST("/refresh-token", authController.RefreshToken)
 		userAuthRoute.POST("/forgot-password", authController.ForgotPassword)
 		userAuthRoute.GET("/check-valid-forgot-link/:token", authController.CheckValidForgotPasswordLink)
 		userAuthRoute.POST("/forgot-password/:token", authController.ForgotPasswordToResetPassword)

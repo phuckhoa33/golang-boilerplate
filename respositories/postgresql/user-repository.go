@@ -30,7 +30,7 @@ func (userRepository *UserRepository) Create(user *models.User) {
 }
 
 func (userRepository *UserRepository) GetUserById(user *models.User, id any) {
-	userRepository.DB.First(&user, id)
+	userRepository.DB.Where("id = ?", id).Find(user)
 }
 
 func (userRepository *UserRepository) UpdateSingleProperty(user *models.User, propertyName string, value string) {

@@ -19,13 +19,6 @@ func Response(context *gin.Context, statusCode int, data interface{}) {
 	context.JSON(statusCode, data)
 }
 
-func MessageResponse(context *gin.Context, statusCode int, message string) {
-	Response(context, statusCode, Data{
-		Code:    statusCode,
-		Message: message,
-	})
-}
-
 func ErrorResponse(context *gin.Context, statusCode int, message string) {
 	Response(context, statusCode, Error{
 		Code:  statusCode,

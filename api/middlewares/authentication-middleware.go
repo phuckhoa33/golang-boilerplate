@@ -39,7 +39,7 @@ func AuthenticationMiddleware(config *config.Config) gin.HandlerFunc {
 		}
 
 		// Assign user id to context
-		c.Set("userId", claims["id"])
+		c.Set("userId", claims["userId"])
 		c.Next()
 	}
 }

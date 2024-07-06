@@ -2,7 +2,6 @@ package user_v1_controller
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	user_requests "golang-boilerplate/domain/requests/user"
 	wrapper_responses "golang-boilerplate/domain/responses"
 	user_responses "golang-boilerplate/domain/responses/user"
@@ -15,6 +14,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 
 	jwtGo "github.com/golang-jwt/jwt/v5"
 
@@ -87,9 +88,6 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 		return
 	}
 
-	// Initialize token service
-	// tokenService := services.NewTokenService(controller.server.Config)
-
 	// Create access token
 	accessToken, exp, err := controller.tokenService.CreateAccessToken(&user)
 	if err != nil {
@@ -104,7 +102,8 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 		return
 	}
 	//  return tokens
-	user_responses.NewLoginResponse(accessToken, refreshToken, exp)
+	res := user_responses.NewLoginResponse(accessToken, refreshToken, exp)
+	wrapper_responses.Response(context, http.StatusOK, res)
 }
 
 // Register godoc
@@ -116,7 +115,7 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			params	body		user_requests.RegisterRequest	true	"User's credentials"
-//	@Failure		401		{object}	wrapper_responses.Error
+//	@Failure		400		{object}	wrapper_responses.Error
 //	@Router			/user/register [post]
 func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 	// Get request information
@@ -193,6 +192,7 @@ func (controller *UserAuthV1Controller) RefreshToken(context *gin.Context) {
 	}
 
 	claims, ok := token.Claims.(jwtGo.MapClaims)
+	fmt.Println(claims)
 	if !ok && !token.Valid {
 		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "INVALID_TOKEN")
 		return
@@ -200,7 +200,7 @@ func (controller *UserAuthV1Controller) RefreshToken(context *gin.Context) {
 
 	// Check user
 	user := models.User{}
-	controller.userRepository.GetUserById(&user, int(claims["id"].(float64)))
+	controller.userRepository.GetUserById(&user, claims["userId"])
 
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "USER_NOT_FOUND")
@@ -221,7 +221,8 @@ func (controller *UserAuthV1Controller) RefreshToken(context *gin.Context) {
 		return
 	}
 	//  return tokens
-	user_responses.NewRefreshTokenResponse(accessToken, refreshToken, exp)
+	res := user_responses.NewRefreshTokenResponse(accessToken, refreshToken, exp)
+	wrapper_responses.Response(context, http.StatusOK, res)
 }
 
 // ForgotPassword godoc
