@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	App  AppConfig
-	DB   DBConfig
-	Auth AuthConfig
-	Mail MailConfig
+	App   AppConfig
+	DB    DBConfig
+	Auth  AuthConfig
+	Mail  MailConfig
+	Minio MinioConfig
 }
 
 func NewConfig() *Config {
@@ -21,10 +22,11 @@ func NewConfig() *Config {
 	}
 
 	env := &Config{
-		App:  LoadAppConfig(),
-		DB:   LoadDBConfig(),
-		Auth: LoadAuthConfig(),
-		Mail: LoadMailConfig(),
+		App:   LoadAppConfig(),
+		DB:    LoadDBConfig(),
+		Auth:  LoadAuthConfig(),
+		Mail:  LoadMailConfig(),
+		Minio: LoadMinioConfig(),
 	}
 
 	if env.App.AppEnv == "development" {

@@ -66,7 +66,7 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 
 	// Check field is empty
 	if err := request.Validate(); err != nil {
-		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "Required fields is empty or invalid")
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "INVALID_INPUT_FORMAT")
 		return
 	}
 
@@ -159,7 +159,7 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 	controller.userRepository.Create(&newUser)
 }
 
-// RefreshToken godoc
+// NewRefreshToken godoc
 //
 //	@Summary		Refresh access token
 //	@Description	Perform refresh access token
@@ -171,7 +171,7 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 //	@Success		200		{object}	user_responses.LoginResponse
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/refresh-token [post]
-func (controller *UserAuthV1Controller) RefreshToken(context *gin.Context) {
+func (controller *UserAuthV1Controller) NewRefreshToken(context *gin.Context) {
 	// Initialize request
 	request := new(user_requests.RefreshRequest)
 	if err := context.Bind(&request); err != nil {
@@ -336,7 +336,7 @@ func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gi
 	wrapper_responses.Response(context, http.StatusOK, true)
 }
 
-// ForgotPasswordToResetPassword godoc
+// ResetPassword godoc
 //
 //	@Summary	 	Forgot password to reset password
 //	@Description	Perform forgot password to reset password
@@ -345,11 +345,11 @@ func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gi
 //	@Accept			json
 //	@Produce		json
 //	@Param token path string true "The forgot password token sent to the user's email."
-//	@Param			params	body		user_requests.ForgotPasswordToResetPasswordRequest	true	"New password of user"
+//	@Param			params	body		user_requests.ResetPasswordRequest	true	"New password of user"
 //	@Failure		401		{object}	wrapper_responses.Error
 //	@Router			/user/forgot-password/{token} [post]
-func (controller *UserAuthV1Controller) ForgotPasswordToResetPassword(context *gin.Context) {
-	request := new(user_requests.ForgotPasswordToResetPasswordRequest)
+func (controller *UserAuthV1Controller) ResetPassword(context *gin.Context) {
+	request := new(user_requests.ResetPasswordRequest)
 	param := context.Param("token")
 
 	// Parse token

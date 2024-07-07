@@ -13,17 +13,3 @@ func NewLoginResponse(token, refreshToken string, exp int64) *LoginResponse {
 		Exp:          exp,
 	}
 }
-
-type RefreshTokenResponses struct {
-	LoginResponse
-}
-
-func NewRefreshTokenResponse(token, refreshToken string, exp int64) *RefreshTokenResponses {
-	return &RefreshTokenResponses{
-		LoginResponse{
-			AccessToken:  token,
-			RefreshToken: refreshToken,
-			Exp:          exp,
-		},
-	}
-}
