@@ -17,6 +17,7 @@ func ConfigureUserMeRoute(server *server.Server, route *gin.RouterGroup) {
 	userMeRoute.Use(middleware.AuthenticationMiddleware(server.Config))
 	{
 		userMeRoute.GET("/me", profileController.GetUserProfile)
+		userMeRoute.PUT("/", profileController.UpdateUserInfo)
 		userMeRoute.GET("/pre-signed-put-url/:objectName", profileController.GetPreSignedPutURL)
 		userMeRoute.PATCH("/change-password", profileController.ChangePassword)
 	}

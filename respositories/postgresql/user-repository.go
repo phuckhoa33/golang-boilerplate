@@ -37,3 +37,7 @@ func (userRepository *UserRepository) UpdateSingleProperty(user *models.User, pr
 	// Update value in users database depend on propertyName
 	userRepository.DB.Model(&user).Update(propertyName, value)
 }
+
+func (userRepository *UserRepository) UpdateUser(user *models.User) {
+	userRepository.DB.Model(&user).Update(&user)
+}

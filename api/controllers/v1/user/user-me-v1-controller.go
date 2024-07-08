@@ -1,6 +1,7 @@
 package user_v1_controller
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	user_requests "golang-boilerplate/domain/requests/user"
 	wrapper_responses "golang-boilerplate/domain/responses"
@@ -11,8 +12,6 @@ import (
 	minio_service "golang-boilerplate/services/minio"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 type UserMeV1Controller struct {
@@ -78,6 +77,49 @@ func (controller *UserMeV1Controller) GetPreSignedPutURL(context *gin.Context) {
 	wrapper_responses.Response(context, http.StatusOK, res)
 }
 
+// UpdateUserInfo godoc
+//
+//	@Summary		Update user info
+//	@Description	Update user info with basic user information
+//	@ID				user-update-user-info
+//	@Tags			user.me
+//	@Accept			json
+//	@Produce		json
+//	@Param			params	body		user_requests.UpdateUserInfoRequest	true	"Update User Info"
+//	@Success		200
+//	@Security ApiKeyAuth
+//	@Failure		400		{object}	wrapper_responses.Error
+//	@Router			/user [put]
+func (controller *UserMeV1Controller) UpdateUserInfo(context *gin.Context) {
+	// Get user id from context
+	userId, _ := context.Get("userId")
+
+	// Get body request
+	request := new(user_requests.UpdateUserInfoRequest)
+	if err := context.Bind(&request); err != nil {
+		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	// Get user and check is existed
+	user := models.User{}
+	controller.userRepository.GetUserById(&user, userId)
+	if user.ID == uuid.Nil {
+		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "NOT_FOUND_USER")
+		return
+	}
+
+	// Update user information
+	// TODO: Lack of some fields for updating
+	user.Gender = request.Gender
+	user.Address = request.Address
+	user.FullName = request.FullName
+	user.PhoneNumber = request.PhoneNumber
+	user.Username = request.Username
+
+	controller.userRepository.UpdateUser(&user)
+}
+
 // ChangePassword godoc
 //
 //	@Summary		Change password
@@ -86,7 +128,7 @@ func (controller *UserMeV1Controller) GetPreSignedPutURL(context *gin.Context) {
 //	@Tags			user.me
 //	@Accept			json
 //	@Produce		json
-//	@Param			params	body		user_requests.ChangePasswordRequest	true	"Refresh token"
+//	@Param			params	body		user_requests.ChangePasswordRequest	true	"Change password"
 //	@Success		200
 //	@Security ApiKeyAuth
 //	@Failure		400		{object}	wrapper_responses.Error
