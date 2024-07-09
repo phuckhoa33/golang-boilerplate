@@ -1,13 +1,13 @@
 package token_service
 
 import (
-	"golang-boilerplate/models"
+	"golang-boilerplate/domain/models/postgresql"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (userTokenService *TokenService) CreateAccessToken(user *models.User) (t string, expired int64, err error) {
+func (userTokenService *TokenService) CreateAccessToken(user *postgresql.User) (t string, expired int64, err error) {
 	accessTokenExpiredIn, _ := time.ParseDuration(userTokenService.config.Auth.AccessTokenExpiredIn)
 	claims := &JwtCustomClaims{
 		Username: user.Username,

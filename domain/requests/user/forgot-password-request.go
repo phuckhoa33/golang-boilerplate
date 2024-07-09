@@ -11,6 +11,5 @@ type ForgotPasswordRequest struct {
 
 func (fpr ForgotPasswordRequest) Validate() error {
 	return validation.ValidateStruct(&fpr,
-		validation.Field(&fpr.Email, is.Email),
-	)
+		validation.Field(&fpr.Email, is.Email.Error("EMAIL_IS_INVALID"), validation.Required.Error("EMAIL_IS_REQUIRED")))
 }

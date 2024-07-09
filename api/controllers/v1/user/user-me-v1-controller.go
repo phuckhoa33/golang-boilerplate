@@ -3,11 +3,11 @@ package user_v1_controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"golang-boilerplate/domain/models/postgresql"
 	user_requests "golang-boilerplate/domain/requests/user"
 	wrapper_responses "golang-boilerplate/domain/responses"
 	user_responses "golang-boilerplate/domain/responses/user"
-	"golang-boilerplate/models"
-	respositories "golang-boilerplate/respositories/postgresql"
+	respositories "golang-boilerplate/domain/respositories/postgresql"
 	"golang-boilerplate/server"
 	minio_service "golang-boilerplate/services/minio"
 	"golang.org/x/crypto/bcrypt"
@@ -42,8 +42,8 @@ func (controller *UserMeV1Controller) GetUserProfile(context *gin.Context) {
 	userId, _ := context.Get("userId")
 
 	// Get user profile
-	user := models.User{}
-	controller.userRepository.GetUserById(&user, userId)
+	user := postgresql.User{}
+	controller.userRepository.GetById(&user, userId)
 
 	// Check user is existed
 	if user.ID == uuid.Nil {
@@ -101,23 +101,24 @@ func (controller *UserMeV1Controller) UpdateUserInfo(context *gin.Context) {
 		return
 	}
 
+	// Validate request
+	if err := request.Validate(); err != nil {
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	// Get user and check is existed
-	user := models.User{}
-	controller.userRepository.GetUserById(&user, userId)
+	user := postgresql.User{}
+	controller.userRepository.GetById(&user, userId)
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "NOT_FOUND_USER")
 		return
 	}
 
 	// Update user information
-	// TODO: Lack of some fields for updating
-	user.Gender = request.Gender
-	user.Address = request.Address
-	user.FullName = request.FullName
-	user.PhoneNumber = request.PhoneNumber
-	user.Username = request.Username
+	// Parse dateOfBirth field from string to time.Time
 
-	controller.userRepository.UpdateUser(&user)
+	controller.userRepository.UpdateModel(&user, request)
 }
 
 // ChangePassword godoc
@@ -147,13 +148,13 @@ func (controller *UserMeV1Controller) ChangePassword(context *gin.Context) {
 
 	// Check field is empty
 	if err := request.Validate(); err != nil {
-		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "INVALID_INPUT_FORMAT")
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Check user
-	user := models.User{}
-	controller.userRepository.GetUserById(&user, userId)
+	user := postgresql.User{}
+	controller.userRepository.GetById(&user, userId)
 	// Check user
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "NOT_FOUND_USER")
@@ -168,5 +169,5 @@ func (controller *UserMeV1Controller) ChangePassword(context *gin.Context) {
 
 	// Update new password
 	hashNewPassword, _ := bcrypt.GenerateFromPassword([]byte(request.NewPassword), bcrypt.DefaultCost)
-	controller.userRepository.UpdateSingleProperty(&user, "password", string(hashNewPassword))
+	controller.userRepository.UpdateOne(&user, "password", string(hashNewPassword))
 }

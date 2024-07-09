@@ -1,11 +1,10 @@
 package token_service
 
 import (
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang-boilerplate/config"
-	"golang-boilerplate/models"
-
-	"github.com/golang-jwt/jwt/v5"
+	"golang-boilerplate/domain/models/postgresql"
 )
 
 type JwtCustomClaims struct {
@@ -20,10 +19,10 @@ type JwtCustomRefreshClaims struct {
 }
 
 type TokenServiceWrapper interface {
-	CreateAccessToken(user *models.User) (accessToken string, exp int64, err error)
-	CreateRefreshToken(user *models.User) (t string, err error)
+	CreateAccessToken(user *postgresql.User) (accessToken string, exp int64, err error)
+	CreateRefreshToken(user *postgresql.User) (t string, err error)
 	VerifyToken(tokenString string) (jwt.MapClaims, error)
-	CreateForgotPasswordToken(user *models.User) (t string, err error)
+	CreateForgotPasswordToken(user *postgresql.User) (t string, err error)
 }
 
 type TokenService struct {

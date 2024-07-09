@@ -1,7 +1,7 @@
 package user_responses
 
 import (
-	"golang-boilerplate/models"
+	"golang-boilerplate/domain/models/postgresql"
 	"time"
 )
 
@@ -17,9 +17,12 @@ type ViewUserProfileResponse struct {
 	Avatar           string    `json:"avatar" example:"image.png"`
 	RoleId           string    `json:"roleId" example:"d103f471-0ccd-4858-b417-d67b09910d34"`
 	VerifyAccountOtp string    `json:"verifyAccountOtp" example:"00100"`
+	CreatedAt        time.Time `json:"createdAt" example:"2021-07-01T00:00:00Z"`
+	UpdatedAt        time.Time `json:"updatedAt" example:"2021-07-01T00:00:00Z"`
+	DeleteAt         time.Time `json:"deleteAt" example:"2021-07-01T00:00:00Z"`
 }
 
-func NewViewUserProfileResponse(user *models.User) *ViewUserProfileResponse {
+func NewViewUserProfileResponse(user *postgresql.User) *ViewUserProfileResponse {
 	return &ViewUserProfileResponse{
 		ID:               user.ID.String(),
 		Email:            user.Email,
@@ -32,5 +35,8 @@ func NewViewUserProfileResponse(user *models.User) *ViewUserProfileResponse {
 		Avatar:           user.Avatar,
 		RoleId:           user.RoleId.String(),
 		VerifyAccountOtp: user.VerifyAccountOtp,
+		CreatedAt:        user.CreatedAt,
+		UpdatedAt:        user.UpdatedAt,
+		DeleteAt:         user.DeleteAt,
 	}
 }

@@ -2,6 +2,7 @@ package user_requests
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"golang-boilerplate/domain/enums"
 )
 
 type RegisterRequest struct {
@@ -18,6 +19,8 @@ func (rr RegisterRequest) Validate() error {
 	}
 
 	return validation.ValidateStruct(&rr,
-		validation.Field(&rr.Username, validation.Required),
+		validation.Field(&rr.Username, validation.Required.Error("USERNAME_IS_REQUIRED")),
+		validation.Field(&rr.Gender, validation.Required.Error("GENDER_IS_REQUIRED"), validation.In(enums.FEMALE, enums.MALE, enums.OTHERS)),
+		validation.Field(&rr.FullName, validation.Required.Error("FULL_NAME_IS_REQUIRED")),
 	)
 }

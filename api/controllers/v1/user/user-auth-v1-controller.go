@@ -2,11 +2,11 @@ package user_v1_controller
 
 import (
 	"fmt"
+	"golang-boilerplate/domain/models/postgresql"
 	user_requests "golang-boilerplate/domain/requests/user"
 	wrapper_responses "golang-boilerplate/domain/responses"
 	user_responses "golang-boilerplate/domain/responses/user"
-	"golang-boilerplate/models"
-	respositories "golang-boilerplate/respositories/postgresql"
+	respositories "golang-boilerplate/domain/respositories/postgresql"
 	"golang-boilerplate/server"
 	mail_service "golang-boilerplate/services/mail"
 	random_creation_service "golang-boilerplate/services/shared"
@@ -66,12 +66,12 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 
 	// Check field is empty
 	if err := request.Validate(); err != nil {
-		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "INVALID_INPUT_FORMAT")
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Check user is existed
-	user := models.User{}
+	user := postgresql.User{}
 
 	// Check user is existed
 	controller.userRepository.GetUserByEmail(&user, request.Email)
@@ -133,7 +133,7 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 	}
 
 	// Check user is existed
-	user := models.User{}
+	user := postgresql.User{}
 	controller.userRepository.GetUserByEmail(&user, request.Email)
 	if user.ID != uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "USER_EXISTED")
@@ -144,11 +144,11 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 	hashPassword, _ := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 
 	// Parse string to uuid
-	role := models.Role{}
+	role := postgresql.Role{}
 	controller.roleRepository.GetRoleByName(&role, "ADMIN")
 
 	// Create new user
-	newUser := models.User{
+	newUser := postgresql.User{
 		Username: request.Username,
 		Email:    strings.ToLower(request.Email),
 		Password: string(hashPassword),
@@ -156,7 +156,7 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 		Gender:   request.Gender,
 		RoleId:   role.ID,
 	}
-	controller.userRepository.Create(&newUser)
+	controller.userRepository.Insert(&newUser)
 }
 
 // NewRefreshToken godoc
@@ -176,6 +176,12 @@ func (controller *UserAuthV1Controller) NewRefreshToken(context *gin.Context) {
 	request := new(user_requests.RefreshRequest)
 	if err := context.Bind(&request); err != nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadGateway, err.Error())
+		return
+	}
+
+	// Validate request
+	if err := request.Validate(); err != nil {
+		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -199,8 +205,8 @@ func (controller *UserAuthV1Controller) NewRefreshToken(context *gin.Context) {
 	}
 
 	// Check user
-	user := models.User{}
-	controller.userRepository.GetUserById(&user, claims["userId"])
+	user := postgresql.User{}
+	controller.userRepository.GetById(&user, claims["userId"])
 
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "USER_NOT_FOUND")
@@ -251,7 +257,7 @@ func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 	}
 
 	// Check user
-	user := models.User{}
+	user := postgresql.User{}
 	controller.userRepository.GetUserByEmail(&user, request.Email)
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
@@ -262,7 +268,7 @@ func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 	otp := controller.randomCreationService.GenerateOTP(6)
 
 	// Update verifyAccountOtp in database of user
-	controller.userRepository.UpdateSingleProperty(&user, "verifyAccountOtp", otp)
+	controller.userRepository.UpdateOne(&user, "verifyAccountOtp", otp)
 
 	// Create token have expired time
 	token, err := controller.tokenService.CreateForgotPasswordToken(request.Email, "Forgot Password", time.Minute*3)
@@ -325,8 +331,8 @@ func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gi
 	}
 
 	// Check user
-	user := models.User{}
-	controller.userRepository.GetUserById(&user, claims["iss"])
+	user := postgresql.User{}
+	controller.userRepository.GetById(&user, claims["iss"])
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
 		return
@@ -371,8 +377,8 @@ func (controller *UserAuthV1Controller) ResetPassword(context *gin.Context) {
 	}
 
 	// Check user
-	user := models.User{}
-	controller.userRepository.GetUserById(&user, claims["iss"])
+	user := postgresql.User{}
+	controller.userRepository.GetById(&user, claims["iss"])
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
 		return
@@ -401,5 +407,5 @@ func (controller *UserAuthV1Controller) ResetPassword(context *gin.Context) {
 		return
 	}
 
-	controller.userRepository.UpdateSingleProperty(&user, "password", string(hashPassword))
+	controller.userRepository.UpdateOne(&user, "password", string(hashPassword))
 }

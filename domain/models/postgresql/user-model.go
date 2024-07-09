@@ -1,12 +1,13 @@
-package models
+package postgresql
 
 import (
 	"github.com/google/uuid"
+	"golang-boilerplate/domain/models/abstracts/base"
 	"time"
 )
 
 type User struct {
-	ID               uuid.UUID `json:"id" gorm:"type:uuid;default:gen_random_uuid();primary_key"` // This is the primary key
+	*base.FullAuditModelAbstract
 	Email            string    `json:"email" gorm:"type:varchar(200);"`
 	Username         string    `json:"username" gorm:"type:varchar(200);"`
 	PhoneNumber      string    `json:"phoneNumber" gorm:"type:varchar(200);"`
