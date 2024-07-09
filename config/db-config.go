@@ -14,7 +14,7 @@ type PostgresDBConfig struct {
 	PostgresDatabaseDebug    string
 }
 
-// DbConfig struct
+// DBConfig DbConfig struct
 type DBConfig struct {
 	PostgresConfig PostgresDBConfig
 }

@@ -1,13 +1,13 @@
 package token_service
 
 import (
-	"golang-boilerplate/models"
+	"golang-boilerplate/domain/models/postgresql"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (userTokenService *TokenService) CreateRefreshToken(user *models.User) (t string, err error) {
+func (userTokenService *TokenService) CreateRefreshToken(user *postgresql.User) (t string, err error) {
 	refreshTokenExpiredIn, _ := time.ParseDuration(userTokenService.config.Auth.RefreshTokenExpiredIn)
 	claimsRefresh := &JwtCustomRefreshClaims{
 		UserID: user.ID,

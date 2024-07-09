@@ -18,7 +18,7 @@ func ConfigureRoutes(server *server.Server) {
 	user_auth_route.ConfigureUserAuthRoute(server, v1)
 	user_auth_route.ConfigureUserMeRoute(server, v1)
 
-	// Configurate path of swagger
+	// Configure path of swagger
 	server.Gin.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Talk out swagger host

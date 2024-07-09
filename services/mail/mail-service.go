@@ -9,25 +9,18 @@ import (
 )
 
 type MailService struct {
-	SMTPHost     string
-	SMTPPort     int
-	SMTPUsername string
-	SMTPPassword string
+	config *config.Config
 }
 
 func NewMailService(config *config.Config) *MailService {
 	return &MailService{
-		SMTPHost:     config.Mail.MailHost,
-		SMTPPort:     config.Mail.MailPort,
-		SMTPUsername: config.Mail.MailUsername,
-		SMTPPassword: config.Mail.MailPassword,
+		config: config,
 	}
 }
 
 func (ms *MailService) SendEmail(to, subject, templateFile string, data interface{}) error {
 	// Parse the email template
 	tmpl, err := template.ParseFiles(templateFile)
-
 	if err != nil {
 		return err
 	}
@@ -41,13 +34,13 @@ func (ms *MailService) SendEmail(to, subject, templateFile string, data interfac
 
 	// Create a new email message
 	m := gomail.NewMessage()
-	m.SetHeader("From", ms.SMTPUsername)
+	m.SetHeader("From", ms.config.Mail.MailUsername)
 	m.SetHeader("To", to)
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", bodyContent.String())
 
 	// Create a new SMTP client
-	d := gomail.NewDialer(ms.SMTPHost, ms.SMTPPort, ms.SMTPUsername, ms.SMTPPassword)
+	d := gomail.NewDialer(ms.config.Mail.MailHost, ms.config.Mail.MailPort, ms.config.Mail.MailUsername, ms.config.Mail.MailPassword)
 
 	// Send the email
 	if err := d.DialAndSend(m); err != nil {
