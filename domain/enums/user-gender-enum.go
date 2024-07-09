@@ -1,9 +1,9 @@
 package enums
 
-type Gender string
+type GenderEnum string
 
 const (
-	MALE   Gender = "MALE"
-	FEMALE Gender = "FEMALE"
-	OTHERS Gender = "OTHERS"
+	MALE   GenderEnum = "MALE"
+	FEMALE GenderEnum = "FEMALE"
+	OTHERS GenderEnum = "OTHERS"
 )

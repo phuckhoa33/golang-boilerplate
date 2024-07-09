@@ -22,7 +22,3 @@ func NewRoleRepository(db *gorm.DB) *RoleRepository {
 		RepositoryAbstract: base.NewBaseRepositoryAbstract(db),
 	}
 }
-
-func (roleRepository *RoleRepository) GetRoleByName(role *postgresql.Role, name string) {
-	roleRepository.DB.Where("name = ?", name).Find(role)
-}

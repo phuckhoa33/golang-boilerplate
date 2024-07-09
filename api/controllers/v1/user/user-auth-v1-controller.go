@@ -74,7 +74,7 @@ func (controller *UserAuthV1Controller) Login(context *gin.Context) {
 	user := postgresql.User{}
 
 	// Check user is existed
-	controller.userRepository.GetUserByEmail(&user, request.Email)
+	controller.userRepository.FindOne(&user, "email", strings.ToLower(request.Email))
 
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
@@ -134,7 +134,7 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 
 	// Check user is existed
 	user := postgresql.User{}
-	controller.userRepository.GetUserByEmail(&user, request.Email)
+	controller.userRepository.FindOne(&user, "email", strings.ToLower(request.Email))
 	if user.ID != uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusBadRequest, "USER_EXISTED")
 		return
@@ -145,7 +145,7 @@ func (controller *UserAuthV1Controller) Register(context *gin.Context) {
 
 	// Parse string to uuid
 	role := postgresql.Role{}
-	controller.roleRepository.GetRoleByName(&role, "ADMIN")
+	controller.roleRepository.FindOne(&role, "name", "USER")
 
 	// Create new user
 	newUser := postgresql.User{
@@ -206,7 +206,7 @@ func (controller *UserAuthV1Controller) NewRefreshToken(context *gin.Context) {
 
 	// Check user
 	user := postgresql.User{}
-	controller.userRepository.GetById(&user, claims["userId"])
+	controller.userRepository.FindById(&user, claims["userId"])
 
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusUnauthorized, "USER_NOT_FOUND")
@@ -258,7 +258,7 @@ func (controller *UserAuthV1Controller) ForgotPassword(context *gin.Context) {
 
 	// Check user
 	user := postgresql.User{}
-	controller.userRepository.GetUserByEmail(&user, request.Email)
+	controller.userRepository.FindOne(&user, "email", strings.ToLower(request.Email))
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
 		return
@@ -332,7 +332,7 @@ func (controller *UserAuthV1Controller) CheckValidForgotPasswordLink(context *gi
 
 	// Check user
 	user := postgresql.User{}
-	controller.userRepository.GetById(&user, claims["iss"])
+	controller.userRepository.FindById(&user, claims["iss"])
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
 		return
@@ -378,7 +378,7 @@ func (controller *UserAuthV1Controller) ResetPassword(context *gin.Context) {
 
 	// Check user
 	user := postgresql.User{}
-	controller.userRepository.GetById(&user, claims["iss"])
+	controller.userRepository.FindById(&user, claims["iss"])
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "USER_NOT_FOUND")
 		return
