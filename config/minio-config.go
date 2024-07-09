@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -13,6 +14,7 @@ type MinioConfig struct {
 	MinioBucketName          string
 	MinioUseSSL              bool
 	MinioPreSignedURLExpired time.Duration
+	MinioURL                 string
 }
 
 func LoadMinioConfig() MinioConfig {
@@ -23,10 +25,15 @@ func LoadMinioConfig() MinioConfig {
 		panic(err)
 	}
 
-	// Parse MINIO_PRESIGNED_URL_EXPIRES
-	preSignedURLExpired, err := strconv.Atoi(os.Getenv("MINIO_PRESIGNED_URL_EXPIRES"))
+	// Parse MINIO_PRE_SIGNED_URL_EXPIRES
+	preSignedURLExpired, err := strconv.Atoi(os.Getenv("MINIO_PRE_SIGNED_URL_EXPIRES"))
 	if err != nil {
 		panic(err)
+	}
+
+	protocol := "https"
+	if !useSSL {
+		protocol = "http"
 	}
 
 	return MinioConfig{
@@ -36,5 +43,6 @@ func LoadMinioConfig() MinioConfig {
 		MinioBucketName:          os.Getenv("MINIO_BUCKET_NAME"),
 		MinioUseSSL:              useSSL,
 		MinioPreSignedURLExpired: time.Duration(preSignedURLExpired * 60 * 60),
+		MinioURL:                 fmt.Sprintf("%s://%s/%s", protocol, os.Getenv("MINIO_ENDPOINT"), os.Getenv("MINIO_BUCKET_NAME")),
 	}
 }

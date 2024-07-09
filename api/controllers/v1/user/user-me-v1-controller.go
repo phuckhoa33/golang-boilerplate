@@ -43,7 +43,7 @@ func (controller *UserMeV1Controller) GetUserProfile(context *gin.Context) {
 
 	// Get user profile
 	user := postgresql.User{}
-	controller.userRepository.GetById(&user, userId)
+	controller.userRepository.FindById(&user, userId)
 
 	// Check user is existed
 	if user.ID == uuid.Nil {
@@ -52,7 +52,7 @@ func (controller *UserMeV1Controller) GetUserProfile(context *gin.Context) {
 	}
 
 	// Mapping response
-	res := user_responses.NewViewUserProfileResponse(&user)
+	res := user_responses.NewViewUserProfileResponse(controller.server.Config, &user)
 
 	wrapper_responses.Response(context, http.StatusOK, res)
 }
@@ -109,7 +109,7 @@ func (controller *UserMeV1Controller) UpdateUserInfo(context *gin.Context) {
 
 	// Get user and check is existed
 	user := postgresql.User{}
-	controller.userRepository.GetById(&user, userId)
+	controller.userRepository.FindById(&user, userId)
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "NOT_FOUND_USER")
 		return
@@ -117,7 +117,6 @@ func (controller *UserMeV1Controller) UpdateUserInfo(context *gin.Context) {
 
 	// Update user information
 	// Parse dateOfBirth field from string to time.Time
-
 	controller.userRepository.UpdateModel(&user, request)
 }
 
@@ -154,7 +153,7 @@ func (controller *UserMeV1Controller) ChangePassword(context *gin.Context) {
 
 	// Check user
 	user := postgresql.User{}
-	controller.userRepository.GetById(&user, userId)
+	controller.userRepository.FindById(&user, userId)
 	// Check user
 	if user.ID == uuid.Nil {
 		wrapper_responses.ErrorResponse(context, http.StatusNotFound, "NOT_FOUND_USER")

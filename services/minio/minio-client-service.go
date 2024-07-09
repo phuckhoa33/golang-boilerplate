@@ -37,11 +37,6 @@ func (mcs *MinioClientService) GetPutPreSignedURL(ctx *gin.Context, objectName s
 
 // GetFileURL Get file url
 func (mcs *MinioClientService) GetFileURL(objectName string) string {
-	useSSL := mcs.Config.Minio.MinioUseSSL
-	protocol := "https"
-	if !useSSL {
-		protocol = "http"
-	}
 
-	return fmt.Sprintf("%s://%s/%s/%s", protocol, mcs.Config.Minio.MinioEndpoint, mcs.Config.Minio.MinioBucketName, objectName)
+	return fmt.Sprintf("%s/%s", mcs.Config.Minio.MinioURL, objectName)
 }

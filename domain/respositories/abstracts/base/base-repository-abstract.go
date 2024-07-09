@@ -17,12 +17,13 @@ Usage:
 
 // IBaseRepository is an interface that defines the basic methods that a repository should have.
 type IBaseRepository interface {
-	GetById(model interface{}, id interface{})
+	FindById(model interface{}, id interface{})
 	Insert(model interface{})
 	UpdateModel(model interface{}, request interface{})
 	UpdateOne(model interface{}, property interface{}, value interface{})
 	Delete(id interface{})
-	GetAll(model interface{})
+	FindAll(model interface{})
+	FindOne(model interface{}, query interface{}, value interface{})
 }
 
 // RepositoryAbstract is a struct that implements the IBaseRepository interface.
@@ -31,10 +32,10 @@ type RepositoryAbstract struct {
 	IBaseRepository
 }
 
-// GetById retrieves a model by its ID from the database.
+// FindById retrieves a model by its ID from the database.
 // It expects a model instance (to populate with the found record) and an ID value.
 // The function uses the ID to locate the record in the database and populates the provided model instance.
-func (bra *RepositoryAbstract) GetById(model interface{}, id interface{}) {
+func (bra *RepositoryAbstract) FindById(model interface{}, id interface{}) {
 	bra.DB.Where("id = ?", id).Find(model)
 }
 
@@ -71,10 +72,16 @@ func (bra *RepositoryAbstract) Delete(id interface{}) {
 	bra.DB.Where("id = ?", id).Delete(id)
 }
 
-// GetAll retrieves all records for a given model from the database.
+// FindAll retrieves all records for a given model from the database.
 // It expects a model instance which will be populated with the results.
-func (bra *RepositoryAbstract) GetAll(model interface{}) {
+func (bra *RepositoryAbstract) FindAll(model interface{}) {
 	bra.DB.Find(model)
+}
+
+// FindOne retrieves a single record from the database based on a query and a value.
+// It expects a model instance which will be populated with the result.
+func (bra *RepositoryAbstract) FindOne(model interface{}, query interface{}, value interface{}) {
+	bra.DB.Where(query, value).Find(model)
 }
 
 // NewBaseRepositoryAbstract creates a new RepositoryAbstract instance with the provided database connection.

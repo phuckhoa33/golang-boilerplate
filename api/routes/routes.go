@@ -1,7 +1,7 @@
 package routes
 
 import (
-	user_auth_route "golang-boilerplate/api/routes/user/auth"
+	user_auth_route "golang-boilerplate/api/routes/user"
 	"golang-boilerplate/server"
 	"log"
 

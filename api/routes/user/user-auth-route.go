@@ -1,4 +1,4 @@
-package user_route
+package user
 
 import (
 	user_v1_controller "golang-boilerplate/api/controllers/v1/user"
